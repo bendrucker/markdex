@@ -46,7 +46,7 @@ func LoadReadme(dir string) (*Entry, error) {
 			return nil, err
 		}
 
-		return &Entry{Title: markdown.Title(doc)}, nil
+		return &Entry{Title: doc.Title()}, nil
 	}
 
 	return nil, nil
