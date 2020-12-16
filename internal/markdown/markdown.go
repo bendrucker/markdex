@@ -46,6 +46,10 @@ func (d *Document) Title() string {
 		break
 	}
 
+	if heading == nil {
+		return ""
+	}
+
 	// TODO: handle heading with multiple text nodes
 	var title string
 	_ = ast.Walk(heading, func(node ast.Node, entering bool) (ast.WalkStatus, error) {

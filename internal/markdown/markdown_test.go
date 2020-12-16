@@ -1,6 +1,8 @@
 package markdown
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 )
 
@@ -15,13 +17,28 @@ func TestDocumentTitle(t *testing.T) {
 	}{
 		{
 			Name:     "standard",
-			Source:   "# Title",
-			Expected: "Title",
+			Expected: "Standard Title",
+		},
+		{
+			Name:     "underscore",
+			Expected: "Underscored Title",
+		},
+		{
+			Name:     "empty",
+			Expected: "",
+		},
+		{
+			Name:     "h2",
+			Expected: "",
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
-			doc := Parse([]byte(tc.Source))
+			doc, err := Load(filepath.Join("testdata", fmt.Sprintf("%s.md", tc.Name)))
+			if err != nil {
+				t.Fatalf("failed to load document: %s", err)
+			}
+
 			if got := doc.Title(); got != tc.Expected {
 				t.Errorf("Title() = %s, expected %s", got, tc.Expected)
 			}
