@@ -31,6 +31,14 @@ func TestDocumentTitle(t *testing.T) {
 			Name:     "h2",
 			Expected: "",
 		},
+		{
+			Name:     "formatted",
+			Expected: "Italics and a Link",
+		},
+		{
+			Name:     "image",
+			Expected: "Title With Inline Image",
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -41,6 +49,7 @@ func TestDocumentTitle(t *testing.T) {
 
 			if got := doc.Title(); got != tc.Expected {
 				t.Errorf("Title() = %s, expected %s", got, tc.Expected)
+				doc.Dump()
 			}
 		})
 	}

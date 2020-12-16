@@ -2,6 +2,7 @@ package markdown
 
 import (
 	"io/ioutil"
+	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -34,6 +35,11 @@ type Document struct {
 	Source []byte
 }
 
+// Dump prints the Document's AST to stdout for debugging
+func (d *Document) Dump() {
+	d.AST.Dump(d.Source, 0)
+}
+
 // Title returns the title of a markdown document from the first <h1>
 func (d *Document) Title() string {
 	var heading *ast.Heading
@@ -50,16 +56,18 @@ func (d *Document) Title() string {
 		return ""
 	}
 
-	// TODO: handle heading with multiple text nodes
-	var title string
+	parts := []string{}
 	_ = ast.Walk(heading, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-		if text, ok := node.(*ast.Text); ok {
-			title = string(text.Segment.Value(d.Source))
-			return ast.WalkStop, nil
+		if text, ok := node.(*ast.Text); entering && ok {
+			parts = append(parts, string(text.Segment.Value(d.Source)))
+		}
+
+		if _, ok := node.(*ast.Image); ok {
+			return ast.WalkSkipChildren, nil
 		}
 
 		return ast.WalkContinue, nil
 	})
 
-	return title
+	return strings.TrimSpace(strings.Join(parts, ""))
 }
