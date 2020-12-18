@@ -1,10 +1,13 @@
 package markdex
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/bendrucker/markdex/internal/markdown"
 )
@@ -140,4 +143,25 @@ func LoadReadme(dir string) (*Entry, error) {
 	}
 
 	return nil, nil
+}
+
+func (e *Entry) Markdown() []byte {
+	buffer := &bytes.Buffer{}
+	for _, child := range e.Children {
+		toBullets(buffer, child, 0)
+	}
+	return buffer.Bytes()
+}
+
+func toBullets(buffer *bytes.Buffer, e *Entry, level int) {
+	_, _ = buffer.WriteString(fmt.Sprintf(
+		"%s* [%s](%s)\n",
+		strings.Repeat("  ", level),
+		e.Title,
+		e.Slug,
+	))
+
+	for _, child := range e.Children {
+		toBullets(buffer, child, level+1)
+	}
 }
