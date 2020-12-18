@@ -31,6 +31,29 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, expected, index)
 }
 
+func TestLoad_noReadme(t *testing.T) {
+	index, err := Load("testdata/no-readme")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := &Entry{
+		Title: "Root",
+		Slug:  "testdata/no-readme",
+		Children: []*Entry{
+			{
+				Title: "foo",
+				Slug:  "testdata/no-readme/foo",
+				Children: []*Entry{
+					NewEntry("Bar", "testdata/no-readme/foo/bar.md"),
+				},
+			},
+		},
+	}
+
+	assert.Equal(t, expected, index)
+}
+
 func TestLoadReadme_lowercase(t *testing.T) {
 	readme, err := LoadReadme("testdata/lowercase")
 	if err != nil {
