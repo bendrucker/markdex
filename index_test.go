@@ -31,6 +31,15 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, expected, index)
 }
 
+func TestLoadReadme_lowercase(t *testing.T) {
+	readme, err := LoadReadme("testdata/lowercase")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "Lowercase Filename", readme.Title)
+}
+
 func TestMarkdown(t *testing.T) {
 	index := &Entry{
 		Title: "Root",
