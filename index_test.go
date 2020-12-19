@@ -13,20 +13,12 @@ func TestLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := &Entry{
-		Title: "Root",
-		Slug:  "testdata/basic",
-		Children: []*Entry{
-			{
-				Title: "Bar",
-				Slug:  "testdata/basic/bar",
-				Children: []*Entry{
-					NewEntry("Baz", "testdata/basic/bar/baz.md"),
-				},
-			},
-			NewEntry("Foo", "testdata/basic/foo.md"),
-		},
-	}
+	expected := newParentNode("Root", "testdata/basic", []*Node{
+		newParentNode("Bar", "bar", []*Node{
+			newNode("Baz", "baz.md"),
+		}),
+		newNode("Foo", "foo.md"),
+	})
 
 	assert.Equal(t, expected, index)
 }
@@ -37,19 +29,11 @@ func TestLoad_noReadme(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := &Entry{
-		Title: "Root",
-		Slug:  "testdata/no-readme",
-		Children: []*Entry{
-			{
-				Title: "foo",
-				Slug:  "testdata/no-readme/foo",
-				Children: []*Entry{
-					NewEntry("Bar", "testdata/no-readme/foo/bar.md"),
-				},
-			},
-		},
-	}
+	expected := newParentNode("Root", "testdata/no-readme", []*Node{
+		newParentNode("foo", "foo", []*Node{
+			newNode("Bar", "bar.md"),
+		}),
+	})
 
 	assert.Equal(t, expected, index)
 }
@@ -64,20 +48,12 @@ func TestLoadReadme_lowercase(t *testing.T) {
 }
 
 func TestMarkdown(t *testing.T) {
-	index := &Entry{
-		Title: "Root",
-		Slug:  "testdata/basic",
-		Children: []*Entry{
-			{
-				Title: "Bar",
-				Slug:  "testdata/basic/bar",
-				Children: []*Entry{
-					NewEntry("Baz", "testdata/basic/bar/baz.md"),
-				},
-			},
-			NewEntry("Foo", "testdata/basic/foo.md"),
-		},
-	}
+	index := newParentNode("Root", "testdata/basic", []*Node{
+		newParentNode("Bar", "bar", []*Node{
+			newNode("Baz", "baz.md"),
+		}),
+		newNode("Foo", "foo.md"),
+	})
 
 	expected := `
 * [Bar](testdata/basic/bar)
@@ -85,5 +61,7 @@ func TestMarkdown(t *testing.T) {
 * [Foo](testdata/basic/foo.md)
 	`
 
-	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(string(index.Markdown())))
+	actual := string(Markdown(index))
+
+	assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(actual))
 }

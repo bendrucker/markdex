@@ -12,79 +12,14 @@ import (
 	"github.com/bendrucker/markdex/internal/markdown"
 )
 
-type Index struct {
-	Entries []*Entry
-}
-
-type Entry struct {
-	Title    string
-	Slug     string
-	Children []*Entry
-}
-
-func NewEntry(title, slug string) *Entry {
-	return &Entry{
-		Title:    title,
-		Slug:     slug,
-		Children: []*Entry{},
-	}
-}
-
-func Load(dir string) (*Entry, error) {
-	root := &Entry{
-		Title:    "Root",
-		Slug:     dir,
-		Children: []*Entry{},
-	}
+func Load(dir string) (*Node, error) {
+	root := newNode("Root", dir)
 
 	load(dir, root)
 	return root, nil
-
-	// entry := root
-	// err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	if path == dir {
-	// 		return nil
-	// 	}
-
-	// 	if info.IsDir() {
-	// 		readme, err := LoadReadme(path)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-
-	// 		if readme == nil {
-	// 			readme = NewEntry(filepath.Base(path), path)
-	// 		}
-
-	// 		entry.Children = append(entry.Children, readme)
-	// 		entry = readme
-	// 		return nil
-	// 	}
-
-	// 	for _, name := range readmeFilenames {
-	// 		if name == filepath.Base(path) {
-	// 			return nil
-	// 		}
-	// 	}
-
-	// 	doc, err := markdown.Load(path)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	entry.Children = append(entry.Children, NewEntry(doc.Title(), path))
-
-	// 	return nil
-	// })
-
-	// return root, err
 }
 
-func load(path string, entry *Entry) error {
+func load(path string, node *Node) error {
 	infos, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -101,10 +36,10 @@ Infos:
 			}
 
 			if readme == nil {
-				readme = NewEntry(filepath.Base(itemPath), itemPath)
+				readme = newNode(info.Name(), info.Name())
 			}
 
-			entry.Children = append(entry.Children, readme)
+			node.AppendChild(readme)
 			load(itemPath, readme)
 		} else {
 			for _, name := range readmeFilenames {
@@ -118,7 +53,7 @@ Infos:
 				return err
 			}
 
-			entry.Children = append(entry.Children, NewEntry(doc.Title(), itemPath))
+			node.AppendChild(newNode(doc.Title(), info.Name()))
 		}
 	}
 
@@ -127,7 +62,7 @@ Infos:
 
 var readmeFilenames = []string{"readme.md", "README.md"}
 
-func LoadReadme(dir string) (*Entry, error) {
+func LoadReadme(dir string) (*Node, error) {
 	for _, name := range readmeFilenames {
 		doc, err := markdown.Load(filepath.Join(dir, name))
 
@@ -139,29 +74,29 @@ func LoadReadme(dir string) (*Entry, error) {
 			return nil, err
 		}
 
-		return NewEntry(doc.Title(), dir), nil
+		return newNode(doc.Title(), filepath.Base(dir)), nil
 	}
 
 	return nil, nil
 }
 
-func (e *Entry) Markdown() []byte {
+func Markdown(node *Node) []byte {
 	buffer := &bytes.Buffer{}
-	for _, child := range e.Children {
+	for _, child := range node.Children {
 		toBullets(buffer, child, 0)
 	}
 	return buffer.Bytes()
 }
 
-func toBullets(buffer *bytes.Buffer, e *Entry, level int) {
+func toBullets(buffer *bytes.Buffer, n *Node, level int) {
 	_, _ = buffer.WriteString(fmt.Sprintf(
 		"%s* [%s](%s)\n",
 		strings.Repeat("  ", level),
-		e.Title,
-		e.Slug,
+		n.Title,
+		n.Path(),
 	))
 
-	for _, child := range e.Children {
+	for _, child := range n.Children {
 		toBullets(buffer, child, level+1)
 	}
 }
